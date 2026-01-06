@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单位换算</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 0;
+            color: white;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .tagline {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .app-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .converter-section {
+            flex: 1;
+            min-width: 300px;
+            background-color: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+        
+        .history-section {
+            flex: 1;
+            min-width: 300px;
+            background-color: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            max-height: 650px;
+            overflow-y: auto;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            color: #2d3436;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f1f2f6;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            color: #6a11cb;
+        }
+        
+        .unit-category {
+            margin-bottom: 25px;
+        }
+        
+        .category-title {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: #636e72;
+            font-weight: 600;
+        }
+        
+        .category-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .category-btn {
+            padding: 10px 18px;
+            background-color: #f8f9fa;
+            border: 1px solid #dfe6e9;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .category-btn:hover {
+            background-color: #e3f2fd;
+            transform: translateY(-2px);
+        }
+        
+        .category-btn.active {
+            background-color: #6a11cb;
+            color: white;
+            border-color: #6a11cb;
+        }
+        
+        .conversion-area {
+            margin-top: 25px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #2d3436;
+        }
+        
+        .input-container {
+            display: flex;
+            border: 1px solid #dfe6e9;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .input-container input {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            font-size: 1.1rem;
+            outline: none;
+        }
+        
+        .input-container select {
+            padding: 16px;
+            border: none;
+            background-color: #f8f9fa;
+            font-size: 1rem;
+            border-left: 1px solid #dfe6e9;
+            outline: none;
+            cursor: pointer;
+        }
+        
+        .swap-btn {
+            display: flex;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        
+        .swap-btn button {
+            background-color: #6a11cb;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+        }
+        
+        .swap-btn button:hover {
+            background-color: #2575fc;
+            transform: rotate(180deg);
+        }
+        
+        .result-container {
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px dashed #6a11cb;
+        }
+        
+        .result-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #6a11cb;
+            margin: 10px 0;
+        }
+        
+        .result-unit {
+            font-size: 1.1rem;
+            color: #636e72;
+        }
+        
+        .conversion-formula {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f1f2f6;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            color: #2d3436;
+        }
+        
+        .history-list {
+            list-style-type: none;
+        }
+        
+        .history-item {
+            padding: 18px;
+            border-bottom: 1px solid #f1f2f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        
+        .history-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .history-conversion {
+            font-weight: 500;
+            color: #2d3436;
+        }
+        
+        .history-value {
+            color: #6a11cb;
+            font-weight: 600;
+        }
+        
+        .history-date {
+            font-size: 0.85rem;
+            color: #636e72;
+            margin-top: 5px;
+        }
+        
+        .clear-history {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background-color: #ff7675;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        
+        .clear-history:hover {
+            background-color: #d63031;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            color: white;
+            margin-top: 40px;
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+        
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .converter-section, .history-section {
+                width: 100%;
+            }
+        }
+        
+        .empty-history {
+            text-align: center;
+            color: #636e72;
+            padding: 40px 0;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-exchange-alt"></i> 单位换算</h1>
+            <p class="tagline">支持长度、重量、温度、面积、体积、速度等多种常用单位的快速转换</p>
+        </header>
+        
+        <div class="app-container">
+            <section class="converter-section">
+                <h2 class="section-title"><i class="fas fa-calculator"></i> 单位换算</h2>
+                
+                <div class="unit-category">
+                    <div class="category-title">选择换算类型：</div>
+                    <div class="category-buttons">
+                        <button class="category-btn active" data-category="length">长度</button>
+                        <button class="category-btn" data-category="weight">重量</button>
+                        <button class="category-btn" data-category="temperature">温度</button>
+                        <button class="category-btn" data-category="area">面积</button>
+                        <button class="category-btn" data-category="volume">体积</button>
+                        <button class="category-btn" data-category="speed">速度</button>
+                    </div>
+                </div>
+                
+                <div class="conversion-area">
+                    <div class="input-group">
+                        <label for="fromValue">输入数值：</label>
+                        <div class="input-container">
+                            <input type="number" id="fromValue" value="1" step="any">
+                            <select id="fromUnit"></select>
+                        </div>
+                    </div>
+                    
+                    <div class="swap-btn">
+                        <button id="swapBtn"><i class="fas fa-sync-alt"></i></button>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="toValue">转换结果：</label>
+                        <div class="input-container">
+                            <input type="text" id="toValue" readonly>
+                            <select id="toUnit"></select>
+                        </div>
+                    </div>
+                    
+                    <div class="result-container">
+                        <div class="result-value" id="resultValue">1</div>
+                        <div class="result-unit" id="resultUnit">米 = 100 厘米</div>
+                    </div>
+                    
+                    <div class="conversion-formula">
+                        转换公式：<span id="formulaText">米 × 100 = 厘米</span>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="history-section">
+                <h2 class="section-title"><i class="fas fa-history"></i> 转换历史</h2>
+                
+                <ul class="history-list" id="historyList">
+                    <!-- 历史记录会动态添加到这里 -->
+                    <li class="empty-history">暂无历史记录，开始转换吧！</li>
+                </ul>
+                
+                <button class="clear-history" id="clearHistoryBtn"><i class="fas fa-trash-alt"></i> 清除历史记录</button>
+            </section>
+        </div>
+        
+        <footer>
+            <p>© 2023 单位换算 | 支持实时单位转换 | 数据存储在本地浏览器中</p>
+        </footer>
+    </div>
+
+    <script>
+        // 单位定义
+        const unitCategories = {
+            length: {
+                name: "长度",
+                units: [
+                    { name: "米", symbol: "m", factor: 1 },
+                    { name: "千米", symbol: "km", factor: 1000 },
+                    { name: "厘米", symbol: "cm", factor: 0.01 },
+                    { name: "毫米", symbol: "mm", factor: 0.001 },
+                    { name: "英寸", symbol: "in", factor: 0.0254 },
+                    { name: "英尺", symbol: "ft", factor: 0.3048 },
+                    { name: "码", symbol: "yd", factor: 0.9144 },
+                    { name: "英里", symbol: "mi", factor: 1609.344 }
+                ]
+            },
+            weight: {
+                name: "重量",
+                units: [
+                    { name: "克", symbol: "g", factor: 1 },
+                    { name: "千克", symbol: "kg", factor: 1000 },
+                    { name: "毫克", symbol: "mg", factor: 0.001 },
+                    { name: "磅", symbol: "lb", factor: 453.59237 },
+                    { name: "盎司", symbol: "oz", factor: 28.349523125 },
+                    { name: "吨", symbol: "t", factor: 1000000 },
+                    { name: "斤", symbol: "jin", factor: 500 }
+                ]
+            },
+            temperature: {
+                name: "温度",
+                units: [
+                    { name: "摄氏度", symbol: "°C", factor: null },
+                    { name: "华氏度", symbol: "°F", factor: null },
+                    { name: "开尔文", symbol: "K", factor: null }
+                ]
+            },
+            area: {
+                name: "面积",
+                units: [
+                    { name: "平方米", symbol: "m²", factor: 1 },
+                    { name: "平方千米", symbol: "km²", factor: 1000000 },
+                    { name: "平方厘米", symbol: "cm²", factor: 0.0001 },
+                    { name: "公顷", symbol: "ha", factor: 10000 },
+                    { name: "英亩", symbol: "acre", factor: 4046.8564224 },
+                    { name: "平方英尺", symbol: "ft²", factor: 0.09290304 },
+                    { name: "平方英寸", symbol: "in²", factor: 0.00064516 }
+                ]
+            },
+            volume: {
+                name: "体积",
+                units: [
+                    { name: "升", symbol: "L", factor: 1 },
+                    { name: "毫升", symbol: "mL", factor: 0.001 },
+                    { name: "立方米", symbol: "m³", factor: 1000 },
+                    { name: "加仑(美)", symbol: "gal(US)", factor: 3.785411784 },
+                    { name: "加仑(英)", symbol: "gal(UK)", factor: 4.54609 },
+                    { name: "立方英尺", symbol: "ft³", factor: 28.316846592 },
+                    { name: "立方英寸", symbol: "in³", factor: 0.016387064 }
+                ]
+            },
+            speed: {
+                name: "速度",
+                units: [
+                    { name: "米/秒", symbol: "m/s", factor: 1 },
+                    { name: "千米/小时", symbol: "km/h", factor: 0.2777777778 },
+                    { name: "英里/小时", symbol: "mph", factor: 0.44704 },
+                    { name: "节", symbol: "kn", factor: 0.5144444444 },
+                    { name: "英尺/秒", symbol: "ft/s", factor: 0.3048 },
+                    { name: "光速", symbol: "c", factor: 299792458 }
+                ]
+            }
+        };
+
+        // 当前选择的单位类型
+        let currentCategory = "length";
+        // 转换历史记录
+        let conversionHistory = JSON.parse(localStorage.getItem("conversionHistory")) || [];
+
+        // DOM元素
+        const categoryButtons = document.querySelectorAll(".category-btn");
+        const fromValueInput = document.getElementById("fromValue");
+        const fromUnitSelect = document.getElementById("fromUnit");
+        const toValueInput = document.getElementById("toValue");
+        const toUnitSelect = document.getElementById("toUnit");
+        const swapBtn = document.getElementById("swapBtn");
+        const resultValue = document.getElementById("resultValue");
+        const resultUnit = document.getElementById("resultUnit");
+        const formulaText = document.getElementById("formulaText");
+        const historyList = document.getElementById("historyList");
+        const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+
+        // 初始化
+        function init() {
+            // 设置默认单位类型
+            setCategory("length");
+            
+            // 加载历史记录
+            renderHistory();
+            
+            // 事件监听器
+            categoryButtons.forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const category = btn.dataset.category;
+                    setCategory(category);
+                });
+            });
+            
+            fromValueInput.addEventListener("input", convert);
+            fromUnitSelect.addEventListener("change", convert);
+            toUnitSelect.addEventListener("change", convert);
+            
+            swapBtn.addEventListener("click", swapUnits);
+            clearHistoryBtn.addEventListener("click", clearHistory);
+        }
+
+        // 设置当前单位类型
+        function setCategory(category) {
+            currentCategory = category;
+            
+            // 更新按钮状态
+            categoryButtons.forEach(btn => {
+                if (btn.dataset.category === category) {
+                    btn.classList.add("active");
+                } else {
+                    btn.classList.remove("active");
+                }
+            });
+            
+            // 更新单位选择框
+            updateUnitSelects();
+            
+            // 转换并更新显示
+            convert();
+        }
+
+        // 更新单位选择框
+        function updateUnitSelects() {
+            const units = unitCategories[currentCategory].units;
+            
+            // 清空选择框
+            fromUnitSelect.innerHTML = "";
+            toUnitSelect.innerHTML = "";
+            
+            // 添加选项
+            units.forEach((unit, index) => {
+                const fromOption = document.createElement("option");
+                fromOption.value = index;
+                fromOption.textContent = `${unit.name} (${unit.symbol})`;
+                fromUnitSelect.appendChild(fromOption);
+                
+                const toOption = document.createElement("option");
+                toOption.value = index;
+                toOption.textContent = `${unit.name} (${unit.symbol})`;
+                toUnitSelect.appendChild(toOption);
+            });
+            
+            // 设置默认选项（第一个和第二个单位）
+            fromUnitSelect.value = 0;
+            toUnitSelect.value = 1;
+        }
+
+        // 单位转换
+        function convert() {
+            const fromValue = parseFloat(fromValueInput.value);
+            const fromIndex = parseInt(fromUnitSelect.value);
+            const toIndex = parseInt(toUnitSelect.value);
+            
+            const units = unitCategories[currentCategory].units;
+            const fromUnit = units[fromIndex];
+            const toUnit = units[toIndex];
+            
+            let result;
+            let formula;
+            
+            // 温度转换需要特殊处理
+            if (currentCategory === "temperature") {
+                result = convertTemperature(fromValue, fromUnit.name, toUnit.name);
+                formula = getTemperatureFormula(fromValue, fromUnit.name, toUnit.name);
+            } else {
+                // 标准单位转换
+                const valueInBase = fromValue * fromUnit.factor;
+                result = valueInBase / toUnit.factor;
+                formula = `${fromValue} ${fromUnit.symbol} × ${fromUnit.factor} ÷ ${toUnit.factor} = ${result.toFixed(6)} ${toUnit.symbol}`;
+            }
+            
+            // 更新结果
+            toValueInput.value = result.toFixed(6);
+            resultValue.textContent = result.toFixed(6);
+            resultUnit.textContent = `${fromValue} ${fromUnit.symbol} = ${result.toFixed(6)} ${toUnit.symbol}`;
+            formulaText.textContent = formula;
+            
+            // 保存到历史记录
+            if (fromValue && !isNaN(fromValue)) {
+                addToHistory(fromValue, fromUnit, result, toUnit);
+            }
+        }
+
+        // 温度转换
+        function convertTemperature(value, fromUnit, toUnit) {
+            if (fromUnit === toUnit) return value;
+            
+            // 转换为摄氏度
+            let celsius;
+            if (fromUnit === "摄氏度") {
+                celsius = value;
+            } else if (fromUnit === "华氏度") {
+                celsius = (value - 32) * 5/9;
+            } else if (fromUnit === "开尔文") {
+                celsius = value - 273.15;
+            }
+            
+            // 从摄氏度转换为目标单位
+            if (toUnit === "摄氏度") {
+                return celsius;
+            } else if (toUnit === "华氏度") {
+                return celsius * 9/5 + 32;
+            } else if (toUnit === "开尔文") {
+                return celsius + 273.15;
+            }
+        }
+
+        // 获取温度转换公式
+        function getTemperatureFormula(value, fromUnit, toUnit) {
+            if (fromUnit === toUnit) return `${value} ${fromUnit} 保持不变`;
+            
+            if (fromUnit === "摄氏度" && toUnit === "华氏度") {
+                return `${value} °C × 9/5 + 32 = ${(value * 9/5 + 32).toFixed(2)} °F`;
+            }
+            if (fromUnit === "华氏度" && toUnit === "摄氏度") {
+                return `(${value} °F - 32) × 5/9 = ${((value - 32) * 5/9).toFixed(2)} °C`;
+            }
+            if (fromUnit === "摄氏度" && toUnit === "开尔文") {
+                return `${value} °C + 273.15 = ${(value + 273.15).toFixed(2)} K`;
+            }
+            if (fromUnit === "开尔文" && toUnit === "摄氏度") {
+                return `${value} K - 273.15 = ${(value - 273.15).toFixed(2)} °C`;
+            }
+            if (fromUnit === "华氏度" && toUnit === "开尔文") {
+                return `(${value} °F - 32) × 5/9 + 273.15 = ${(((value - 32) * 5/9) + 273.15).toFixed(2)} K`;
+            }
+            if (fromUnit === "开尔文" && toUnit === "华氏度") {
+                return `(${value} K - 273.15) × 9/5 + 32 = ${(((value - 273.15) * 9/5) + 32).toFixed(2)} °F`;
+            }
+            
+            return "温度转换公式";
+        }
+
+        // 交换单位
+        function swapUnits() {
+            const fromIndex = fromUnitSelect.value;
+            const toIndex = toUnitSelect.value;
+            
+            fromUnitSelect.value = toIndex;
+            toUnitSelect.value = fromIndex;
+            
+            convert();
+        }
+
+        // 添加到历史记录
+        function addToHistory(fromValue, fromUnit, toValue, toUnit) {
+            const historyItem = {
+                category: currentCategory,
+                categoryName: unitCategories[currentCategory].name,
+                fromValue: fromValue,
+                fromUnit: fromUnit.symbol,
+                fromUnitName: fromUnit.name,
+                toValue: toValue,
+                toUnit: toUnit.symbol,
+                toUnitName: toUnit.name,
+                timestamp: new Date().toLocaleString("zh-CN")
+            };
+            
+            // 添加到历史记录数组开头
+            conversionHistory.unshift(historyItem);
+            
+            // 限制历史记录数量
+            if (conversionHistory.length > 20) {
+                conversionHistory = conversionHistory.slice(0, 20);
+            }
+            
+            // 保存到本地存储
+            localStorage.setItem("conversionHistory", JSON.stringify(conversionHistory));
+            
+            // 更新历史记录显示
+            renderHistory();
+        }
+
+        // 渲染历史记录
+        function renderHistory() {
+            historyList.innerHTML = "";
+            
+            if (conversionHistory.length === 0) {
+                const emptyItem = document.createElement("li");
+                emptyItem.className = "empty-history";
+                emptyItem.textContent = "暂无历史记录，开始转换吧！";
+                historyList.appendChild(emptyItem);
+                return;
+            }
+            
+            conversionHistory.forEach(item => {
+                const li = document.createElement("li");
+                li.className = "history-item";
+                
+                li.innerHTML = `
+                    <div>
+                        <div class="history-conversion">
+                            <span class="history-value">${item.fromValue} ${item.fromUnit}</span>
+                            <span> → </span>
+                            <span class="history-value">${item.toValue.toFixed(6)} ${item.toUnit}</span>
+                        </div>
+                        <div class="history-date">
+                            ${item.categoryName} · ${item.timestamp}
+                        </div>
+                    </div>
+                    <div>
+                        <i class="fas fa-${getCategoryIcon(item.category)}"></i>
+                    </div>
+                `;
+                
+                historyList.appendChild(li);
+            });
+        }
+
+        // 获取分类图标
+        function getCategoryIcon(category) {
+            const icons = {
+                length: "ruler",
+                weight: "weight-hanging",
+                temperature: "thermometer-half",
+                area: "border-all",
+                volume: "flask",
+                speed: "tachometer-alt"
+            };
+            
+            return icons[category] || "exchange-alt";
+        }
+
+        // 清除历史记录
+        function clearHistory() {
+            if (conversionHistory.length === 0) return;
+            
+            if (confirm("确定要清除所有历史记录吗？")) {
+                conversionHistory = [];
+                localStorage.removeItem("conversionHistory");
+                renderHistory();
+            }
+        }
+
+        // 初始化应用
+        window.addEventListener("DOMContentLoaded", init);
+    </script>
+</body>
+</html>

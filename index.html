@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>单位换算</title>
+    <title>单位转换</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -223,6 +223,86 @@
             color: #2d3436;
         }
         
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .confirm-btn, .cancel-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .confirm-btn {
+            background-color: #00b894;
+            color: white;
+        }
+        
+        .confirm-btn:hover {
+            background-color: #00a085;
+            transform: translateY(-2px);
+        }
+        
+        .confirm-btn:disabled {
+            background-color: #b2bec3;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .cancel-btn {
+            background-color: #dfe6e9;
+            color: #636e72;
+        }
+        
+        .cancel-btn:hover {
+            background-color: #d1d8dd;
+            transform: translateY(-2px);
+        }
+        
+        .cancel-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background-color: #00b894;
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100px);
+            transition: all 0.3s ease;
+        }
+        
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .notification.error {
+            background-color: #e17055;
+        }
+        
         .history-list {
             list-style-type: none;
         }
@@ -254,6 +334,28 @@
             font-size: 0.85rem;
             color: #636e72;
             margin-top: 5px;
+        }
+        
+        .history-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .history-btn {
+            background: none;
+            border: none;
+            color: #636e72;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        
+        .history-btn:hover {
+            color: #6a11cb;
+        }
+        
+        .history-btn.delete:hover {
+            color: #e17055;
         }
         
         .clear-history {
@@ -296,6 +398,10 @@
             .converter-section, .history-section {
                 width: 100%;
             }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
         }
         
         .empty-history {
@@ -309,7 +415,7 @@
 <body>
     <div class="container">
         <header>
-            <h1><i class="fas fa-exchange-alt"></i> 单位换算</h1>
+            <h1><i class="fas fa-exchange-alt"></i> 单位转换</h1>
             <p class="tagline">支持长度、重量、温度、面积、体积、速度等多种常用单位的快速转换</p>
         </header>
         
@@ -358,6 +464,15 @@
                     <div class="conversion-formula">
                         转换公式：<span id="formulaText">米 × 100 = 厘米</span>
                     </div>
+                    
+                    <div class="action-buttons">
+                        <button class="confirm-btn" id="confirmBtn" disabled>
+                            <i class="fas fa-check-circle"></i> 确认转换并保存
+                        </button>
+                        <button class="cancel-btn" id="cancelBtn" disabled>
+                            <i class="fas fa-times-circle"></i> 取消保存
+                        </button>
+                    </div>
                 </div>
             </section>
             
@@ -373,8 +488,13 @@
             </section>
         </div>
         
+        <div class="notification" id="notification">
+            <i class="fas fa-check-circle"></i>
+            <span id="notificationText">转换已保存到历史记录</span>
+        </div>
+        
         <footer>
-            <p>© 2025 单位换算 | 支持实时单位转换 | 数据存储在本地浏览器中</p>
+            <p>© 2026 全能单位转换 | 支持实时单位转换 | 数据存储在本地浏览器中</p>
         </footer>
     </div>
 
@@ -455,6 +575,8 @@
         let currentCategory = "length";
         // 转换历史记录
         let conversionHistory = JSON.parse(localStorage.getItem("conversionHistory")) || [];
+        // 当前待确认的转换
+        let pendingConversion = null;
 
         // DOM元素
         const categoryButtons = document.querySelectorAll(".category-btn");
@@ -466,8 +588,12 @@
         const resultValue = document.getElementById("resultValue");
         const resultUnit = document.getElementById("resultUnit");
         const formulaText = document.getElementById("formulaText");
+        const confirmBtn = document.getElementById("confirmBtn");
+        const cancelBtn = document.getElementById("cancelBtn");
         const historyList = document.getElementById("historyList");
         const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+        const notification = document.getElementById("notification");
+        const notificationText = document.getElementById("notificationText");
 
         // 初始化
         function init() {
@@ -490,7 +616,12 @@
             toUnitSelect.addEventListener("change", convert);
             
             swapBtn.addEventListener("click", swapUnits);
+            confirmBtn.addEventListener("click", confirmConversion);
+            cancelBtn.addEventListener("click", cancelConversion);
             clearHistoryBtn.addEventListener("click", clearHistory);
+            
+            // 初始化通知
+            notification.style.display = "none";
         }
 
         // 设置当前单位类型
@@ -569,10 +700,131 @@
             resultUnit.textContent = `${fromValue} ${fromUnit.symbol} = ${result.toFixed(6)} ${toUnit.symbol}`;
             formulaText.textContent = formula;
             
-            // 保存到历史记录
+            // 设置待确认的转换
             if (fromValue && !isNaN(fromValue)) {
-                addToHistory(fromValue, fromUnit, result, toUnit);
+                pendingConversion = {
+                    category: currentCategory,
+                    categoryName: unitCategories[currentCategory].name,
+                    fromValue: fromValue,
+                    fromUnit: fromUnit.symbol,
+                    fromUnitName: fromUnit.name,
+                    toValue: result,
+                    toUnit: toUnit.symbol,
+                    toUnitName: toUnit.name,
+                    timestamp: new Date().toLocaleString("zh-CN")
+                };
+                
+                // 启用确认和取消按钮
+                confirmBtn.disabled = false;
+                cancelBtn.disabled = false;
+                
+                // 添加视觉反馈
+                confirmBtn.innerHTML = '<i class="fas fa-check-circle"></i> 确认转换并保存';
+                cancelBtn.innerHTML = '<i class="fas fa-times-circle"></i> 取消保存';
+            } else {
+                // 禁用按钮
+                confirmBtn.disabled = true;
+                cancelBtn.disabled = true;
+                pendingConversion = null;
             }
+        }
+
+        // 确认转换并保存
+        function confirmConversion() {
+            if (!pendingConversion) {
+                showNotification("没有可保存的转换", true);
+                return;
+            }
+            
+            // 添加到历史记录数组开头
+            conversionHistory.unshift(pendingConversion);
+            
+            // 限制历史记录数量
+            if (conversionHistory.length > 50) {
+                conversionHistory = conversionHistory.slice(0, 50);
+            }
+            
+            // 保存到本地存储
+            localStorage.setItem("conversionHistory", JSON.stringify(conversionHistory));
+            
+            // 更新历史记录显示
+            renderHistory();
+            
+            // 显示成功通知
+            showNotification(`转换已保存到历史记录`);
+            
+            // 重置待确认的转换
+            pendingConversion = null;
+            
+            // 禁用确认和取消按钮
+            confirmBtn.disabled = true;
+            cancelBtn.disabled = true;
+            
+            // 更新按钮文本
+            confirmBtn.innerHTML = '<i class="fas fa-check-circle"></i> 已保存';
+            cancelBtn.innerHTML = '<i class="fas fa-times-circle"></i> 已取消';
+            
+            // 3秒后恢复按钮文本
+            setTimeout(() => {
+                if (confirmBtn.disabled) {
+                    confirmBtn.innerHTML = '<i class="fas fa-check-circle"></i> 确认转换并保存';
+                    cancelBtn.innerHTML = '<i class="fas fa-times-circle"></i> 取消保存';
+                }
+            }, 3000);
+        }
+
+        // 取消保存转换
+        function cancelConversion() {
+            if (!pendingConversion) {
+                showNotification("没有可取消的转换", true);
+                return;
+            }
+            
+            // 重置待确认的转换
+            pendingConversion = null;
+            
+            // 禁用确认和取消按钮
+            confirmBtn.disabled = true;
+            cancelBtn.disabled = true;
+            
+            // 更新按钮文本
+            confirmBtn.innerHTML = '<i class="fas fa-check-circle"></i> 已取消';
+            cancelBtn.innerHTML = '<i class="fas fa-times-circle"></i> 已取消';
+            
+            // 显示取消通知
+            showNotification("转换保存已取消", true);
+            
+            // 3秒后恢复按钮文本
+            setTimeout(() => {
+                if (confirmBtn.disabled) {
+                    confirmBtn.innerHTML = '<i class="fas fa-check-circle"></i> 确认转换并保存';
+                    cancelBtn.innerHTML = '<i class="fas fa-times-circle"></i> 取消保存';
+                }
+            }, 3000);
+        }
+
+        // 显示通知
+        function showNotification(message, isError = false) {
+            notificationText.textContent = message;
+            
+            if (isError) {
+                notification.classList.add("error");
+                notification.innerHTML = `<i class="fas fa-exclamation-circle"></i> <span id="notificationText">${message}</span>`;
+            } else {
+                notification.classList.remove("error");
+                notification.innerHTML = `<i class="fas fa-check-circle"></i> <span id="notificationText">${message}</span>`;
+            }
+            
+            notification.style.display = "flex";
+            notification.classList.add("show");
+            
+            // 3秒后隐藏通知
+            setTimeout(() => {
+                notification.classList.remove("show");
+                setTimeout(() => {
+                    notification.style.display = "none";
+                }, 300);
+            }, 3000);
         }
 
         // 温度转换
@@ -636,35 +888,6 @@
             convert();
         }
 
-        // 添加到历史记录
-        function addToHistory(fromValue, fromUnit, toValue, toUnit) {
-            const historyItem = {
-                category: currentCategory,
-                categoryName: unitCategories[currentCategory].name,
-                fromValue: fromValue,
-                fromUnit: fromUnit.symbol,
-                fromUnitName: fromUnit.name,
-                toValue: toValue,
-                toUnit: toUnit.symbol,
-                toUnitName: toUnit.name,
-                timestamp: new Date().toLocaleString("zh-CN")
-            };
-            
-            // 添加到历史记录数组开头
-            conversionHistory.unshift(historyItem);
-            
-            // 限制历史记录数量
-            if (conversionHistory.length > 20) {
-                conversionHistory = conversionHistory.slice(0, 20);
-            }
-            
-            // 保存到本地存储
-            localStorage.setItem("conversionHistory", JSON.stringify(conversionHistory));
-            
-            // 更新历史记录显示
-            renderHistory();
-        }
-
         // 渲染历史记录
         function renderHistory() {
             historyList.innerHTML = "";
@@ -677,9 +900,10 @@
                 return;
             }
             
-            conversionHistory.forEach(item => {
+            conversionHistory.forEach((item, index) => {
                 const li = document.createElement("li");
                 li.className = "history-item";
+                li.dataset.index = index;
                 
                 li.innerHTML = `
                     <div>
@@ -692,13 +916,55 @@
                             ${item.categoryName} · ${item.timestamp}
                         </div>
                     </div>
-                    <div>
-                        <i class="fas fa-${getCategoryIcon(item.category)}"></i>
+                    <div class="history-actions">
+                        <button class="history-btn delete" title="删除记录" onclick="deleteHistoryItem(${index})">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                        <button class="history-btn" title="重新使用" onclick="reuseHistoryItem(${index})">
+                            <i class="fas fa-redo-alt"></i>
+                        </button>
                     </div>
                 `;
                 
                 historyList.appendChild(li);
             });
+        }
+
+        // 删除历史记录项
+        function deleteHistoryItem(index) {
+            if (confirm("确定要删除这条记录吗？")) {
+                conversionHistory.splice(index, 1);
+                localStorage.setItem("conversionHistory", JSON.stringify(conversionHistory));
+                renderHistory();
+                showNotification("记录已删除");
+            }
+        }
+
+        // 重新使用历史记录项
+        function reuseHistoryItem(index) {
+            const item = conversionHistory[index];
+            
+            // 设置当前类别
+            setCategory(item.category);
+            
+            // 设置输入值
+            fromValueInput.value = item.fromValue;
+            
+            // 找到对应的单位索引
+            const units = unitCategories[item.category].units;
+            const fromIndex = units.findIndex(unit => unit.symbol === item.fromUnit);
+            const toIndex = units.findIndex(unit => unit.symbol === item.toUnit);
+            
+            if (fromIndex !== -1) fromUnitSelect.value = fromIndex;
+            if (toIndex !== -1) toUnitSelect.value = toIndex;
+            
+            // 执行转换
+            convert();
+            
+            // 滚动到转换区域
+            document.querySelector('.converter-section').scrollIntoView({ behavior: 'smooth' });
+            
+            showNotification("已加载历史转换参数");
         }
 
         // 获取分类图标
@@ -723,11 +989,16 @@
                 conversionHistory = [];
                 localStorage.removeItem("conversionHistory");
                 renderHistory();
+                showNotification("历史记录已清除");
             }
         }
 
         // 初始化应用
         window.addEventListener("DOMContentLoaded", init);
+        
+        // 将函数暴露给全局作用域，以便在历史记录项中使用
+        window.deleteHistoryItem = deleteHistoryItem;
+        window.reuseHistoryItem = reuseHistoryItem;
     </script>
 </body>
 </html>
